@@ -1,0 +1,55 @@
+version: "2"
+run:
+  timeout: "5m"
+  issues-exit-code: 1
+  tests: true
+  allow-parallel-runners: true
+  relative-path-mode: wd
+linters:
+  enable:
+    - revive
+    - goconst
+    - gocritic
+    - dupl
+    - gocyclo
+    - misspell
+    - nakedret
+    - lll
+    - staticcheck
+    - unconvert
+    - bodyclose
+    - paralleltest
+    - ineffassign
+  settings:
+    lll:
+      line-length: 120
+    revive:
+      severity: warning
+      rules:
+        - name: exported
+          severity: warning
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+    - gofmt
+  # settings:
+    # gofmt:
+    #   simplify: true
+    #   rewrite-rules:
+    #     - pattern: interface{}
+    #       replacement: any
+  # exclusions:
+  #   generated: lax
+  #   paths:
+  #     - third_party$
+  #     - builtin$
+  #     - examples$

@@ -1,0 +1,25 @@
+# Base image with Go
+FROM golang:latest
+
+WORKDIR /app
+
+# Install reflex or air (optional, for hot reloads — see below)
+# RUN go install github.com/cespare/reflex@latest
+# Install Air
+RUN go install github.com/air-verse/air@latest
+
+
+# Copy go.mod and go.sum first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code
+COPY . .
+
+EXPOSE 8080
+
+# Default command (can be overridden in docker-compose)
+# CMD ["go", go bui"run", "./cmd/url-shortener"]
+
+# Start Air for live reload
+CMD ["air"]

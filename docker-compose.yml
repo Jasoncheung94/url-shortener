@@ -1,0 +1,134 @@
+services:
+  go-url-shortener-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: go-url-shortener-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app # map everything to inside container.
+    depends_on:
+      redis-master:
+        condition: service_started
+      postgres-url-shortener:
+        condition: service_healthy
+      mongodb-url-shortener:
+        condition: service_healthy
+    environment:
+      - ENV=development
+      - MONGO_URI=mongodb://admin:adminpassword@mongodb-url-shortener:27017/?authSource=admin
+      - POSTGRES_URI=postgres://admin:adminpassword@postgres-url-shortener:5432/url_shortener_db?sslmode=disable
+      - REDIS_ADDR=redis-master:6379
+    networks:
+      - backend
+    restart: unless-stopped
+
+  postgres-url-shortener:
+    image: postgres:latest
+    container_name: postgres-url-shortener
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: url_shortener_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Matches volume below
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"] # Run command inside container.
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-url-shortener:
+    image: mongo:latest
+    container_name: mongodb-url-shortener
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+      MONGO_INITDB_DATABASE: url_shortener_db
+    ports:
+      - "27017:27017" # Exposes MongoDB for Compass
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost/test --quiet
+      # test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost/test --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_AUTH_USERNAME: admin
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: pass
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: adminpassword
+      ME_CONFIG_MONGODB_SERVER: mongodb-url-shortener
+    depends_on:
+      mongodb-url-shortener:
+        condition: service_healthy
+    networks:
+      - backend
+
+  redis-master:
+    image: redis:latest
+    container_name: redis-master
+    ports:
+      - "6379:6379"
+    # command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"] # Use the mounted redis.conf
+    volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf # Mount the custom redis.conf
+      - redis-master-data:/data
+    restart: always
+    networks:
+      backend:
+        aliases:
+          - redis-master
+
+  # redis-replica:
+  #   image: redis:latest
+  #   container_name: redis-replica
+  #   ports:
+  #     - "6380:6379"
+  #   command: ["redis-server", "--replicaof", "redis-master", "6379"]
+  #   depends_on:
+  #     - redis-master
+  #   volumes:
+  #     - redis-replica-data:/data
+  #   networks:
+  #     - backend
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - 5540:5540
+    environment:
+      - REDIS_URL=redis://redis-master:6379 # Point to your Redis master container
+    depends_on:
+      - redis-master
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis-master-data:
+  redis-replica-data:
+  redis-replica-2-data:
+
+networks:
+  backend:
+    driver: bridge

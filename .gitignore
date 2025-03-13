@@ -1,0 +1,4 @@
+.env
+/tmp
+.DS_Store
+coverage.out

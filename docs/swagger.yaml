@@ -1,0 +1,120 @@
+definitions:
+  model.URL:
+    properties:
+      createdAt:
+        type: string
+      customURL:
+        maxLength: 20
+        minLength: 3
+        type: string
+      expirationDate:
+        type: string
+      originalURL:
+        type: string
+      shortURL:
+        type: string
+    required:
+    - originalURL
+    type: object
+info:
+  contact: {}
+paths:
+  /{shorturl}:
+    get:
+      description: Finds the original URL from the shortened key and redirects
+      parameters:
+      - description: Shortened URL key
+        in: path
+        name: shorturl
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redirects to the original URL
+      tags:
+      - URL Shortener
+  /preview/{shorturl}:
+    get:
+      consumes:
+      - application/json
+      description: Returns information about a short URL, such as the original URL
+        and metadata.
+      parameters:
+      - description: Short URL code
+        in: path
+        name: shorturl
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.URL'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Preview a short URL
+      tags:
+      - URL Shortener
+  /shorten:
+    post:
+      consumes:
+      - application/json
+      description: Accepts a long URL, a custom alias, and an optional expiration
+        date, and returns a shortened version
+      parameters:
+      - description: Request body containing URL, custom alias, and expiration date
+        in: body
+        name: requestBody
+        required: true
+        schema:
+          $ref: '#/definitions/model.URL'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Shortens a URL
+      tags:
+      - URL Shortener
+swagger: "2.0"

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <!-- <link rel="icon" href="http://localhost:8080/favicon.ico" type="image/x-icon" /> -->
+
+    <title>URL Shortener</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 500px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* display: flex; */
+        /* flex-direction: column; */
+      }
+
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .input-container input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .input-container button {
+        padding: 12px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .input-container button:hover {
+        background-color: #45a049;
+      }
+
+      .result {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        background-color: #f9f9f9;
+        padding: 0px 15px 15px 15px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .result a {
+        color: #1a73e8;
+        text-decoration: none;
+        font-weight: bold;
+        word-break: break-word;
+      }
+
+      .result a:hover {
+        text-decoration: underline;
+      }
+
+      .copy-btn {
+        padding: 8px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .copy-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .error {
+        color: red;
+        font-size: 14px;
+      }
+
+      .copy-message {
+        display: none;
+        color: green;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>URL Shortener</h1>
+
+    <div class="container">
+      <div class="input-container">
+        <label for="urlInput">Enter your long URL</label>
+        <input
+          type="text"
+          id="urlInput"
+          placeholder="Enter your long URL here"
+          required
+        />
+        <label for="customUrlInput">Custom Alias (optional)</label>
+        <input
+          type="text"
+          id="customUrlInput"
+          placeholder="Enter custom alias (optional)"
+        />
+        <label for="expirationDate">Expiration Date (optional)</label>
+        <input type="date" id="expirationDate" name="expirationDate" />
+        <button onclick="shortenURL()">Shorten URL</button>
+      </div>
+      <p class="error" id="errorMsg"></p>
+
+      <div class="result" id="resultBox">
+        <p>Your shortened URL:</p>
+        <a id="shortenedLink" href="#" target="_blank"></a>
+        <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+        <span id="copyMessage" class="copy-message">Copied!</span>
+      </div>
+    </div>
+
+    <script>
+      const tomorrow = new Date(Date.now() + 3600 * 1000 * 24).toISOString();
+      document.getElementById("expirationDate").min = tomorrow.slice(0,10);
+
+      async function shortenURL() {
+        const urlInput = document.getElementById("urlInput")?.value || "";
+        const resultBox = document.getElementById("resultBox");
+        const shortenedLink = document.getElementById("shortenedLink");
+        const errorMsg = document.getElementById("errorMsg");
+        const copyMessage = document.getElementById("copyMessage");
+        const customAlias = document
+          .getElementById("customUrlInput")?.value.trim() || null;
+        const expirationDate = document.getElementById("expirationDate")?.value ? new Date(document.getElementById("expirationDate").value).toISOString() : null;
+
+
+        // Clear previous errors
+        errorMsg.textContent = "";
+
+        if (!urlInput.trim() || !urlInput || !isValidURL(urlInput)) {
+          errorMsg.textContent = "Please enter a valid URL.";
+          document.getElementById("urlInput").focus();
+          return;
+        }
+
+        try {
+          const response = await fetch("/shorten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              originalURL: urlInput,
+              customURL: customAlias,
+              expirationDate: expirationDate,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to shorten URL");
+          }
+
+          const data = await response.json();
+          if (data.shortURL) {
+            shortenedLink.href = data.shortURL;
+            shortenedLink.textContent = data.shortURL;
+            resultBox.style.display = "flex"; // Show result
+          }
+        } catch (error) {
+          errorMsg.textContent = "An error occurred. Please try again later.";
+          console.error(error);
+        }
+      }
+
+      function copyToClipboard() {
+        const link = document.getElementById("shortenedLink").textContent;
+        navigator.clipboard.writeText(link).then(() => {
+          const copyMessage = document.getElementById("copyMessage");
+          copyMessage.style.display = "inline"; // Show "Copied!" message
+          copyMessage.style.textAlign = "center";
+
+          setTimeout(() => {
+            copyMessage.style.display = "none"; // Hide after 2 seconds
+          }, 5000);
+        });
+      }
+
+      function isValidURL(url) {
+        if (/\s/.test(url)) {
+          return false;
+        }
+        try {
+          const parsedURL = new URL(url);
+
+          // Ensure protocol is HTTP or HTTPS
+          if (
+            parsedURL.protocol !== "http:" &&
+            parsedURL.protocol !== "https:"
+          ) {
+            return false;
+          }
+
+          // Ensure hostname is a valid domain (contains at least one dot and no spaces)
+          const hostname = parsedURL.hostname;
+          if (!hostname.includes(".") || /\s/.test(hostname)) {
+            return false;
+          }
+
+          return true;
+        } catch (error) {
+          return false; // URL parsing failed, so it's invalid
+        }
+      }
+    </script>
+  </body>
+</html>
