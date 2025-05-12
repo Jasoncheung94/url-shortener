@@ -180,6 +180,12 @@ const docTemplate = `{
                 "expirationDate": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
+                "objectID": {
+                    "type": "string"
+                },
                 "originalURL": {
                     "type": "string"
                 },

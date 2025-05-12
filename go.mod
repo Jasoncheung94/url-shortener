@@ -7,7 +7,6 @@ require (
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/viper v1.20.1

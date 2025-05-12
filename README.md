@@ -13,6 +13,12 @@ This project is not intended for production use, but it demonstrates a backend b
 
 ## Architecture Overview
 
+High Level Design
+
+![High Level Design POC](docs/HighLevelDesign.jpg)
+
+<!-- <img src="docs/HighLevelDesign.jpg" alt="High Level Design POC" width="600"/> -->
+
 ## Feature Overview
 
 | Core Functionality                                  | Developer Experience & Tooling                             |
@@ -59,20 +65,25 @@ To run and develop this project locally, ensure you have the following installed
 
 Run `make install-tools` to obtain required tools otherwise manually install:
 
-- air Live reload for local dev go install github.com/air-verse/air@latest
-- golangci-lint Linting go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-- swag Swagger docs generator go install github.com/swaggo/swag/cmd/swag@latest
-- migrate SQL migrations (if used later) go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+- air Live reload: `go install github.com/air-verse/air@latest`
+- golangci-lint Linting: `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest`
+- swag Swagger docs generator: `go install github.com/swaggo/swag/cmd/swag@latest`
+- migrate SQL migrations: `go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest`
 
-| Description                                     | Links                  |
-| ----------------------------------------------- | ---------------------- |
-| Mongo Express - Username: admin, password: pass | http://localhost:8081/ |
-| Redis Insight:                                  | http://localhost:5540/ |
-| URL Shortener:                                  | http://localhost:8080/ |
+#### GUI/Links
+
+| Description                                             | Links                  |
+| ------------------------------------------------------- | ---------------------- |
+| Mongo Express - Username: admin, password: pass         | http://localhost:8081/ |
+| Redis Insight: Host = redis://default@redis-master:6379 | http://localhost:5540/ |
+| URL Shortener:                                          | http://localhost:8080/ |
+
+### Running the Project
 
 To start development, use the provided make commands for convenience.
 
 Start with Docker (backend and dependencies):
+This will up the containers and run SQL migrations and run the Go app with live reload in the container.
 
 ```
 make dev
@@ -98,7 +109,7 @@ Other commands include:
 
 ## Configuration
 
-The configuration settings are defined in environment variables, and you can adjust them for your local or production environments. Refer to the .env.example file for a template.
+The configuration settings are defined in environment variables, and you can adjust them for your local or production environments. This is currently modified in the env vars of docker-compose otherwise it defaults to env vars in code.
 
 ## URL Model + DB Schema
 
@@ -117,7 +128,7 @@ The configuration settings are defined in environment variables, and you can adj
 ## Code Structure
 
 The project is structured to promote clean separation of concerns, modularity, and ease of maintenance. Below are the key directories and their roles in the application.
-The core layers—Handler, Service, Cache, and Repository—are all encapsulated within the shortener folder, ensuring that the related code is grouped together for better organization and maintainability.
+The core layers—Handler, Service, Cache, and Repository are all encapsulated within the shortener folder, ensuring that the related code is grouped together for better organization and maintainability.
 
 ```
 .
@@ -161,11 +172,11 @@ The project uses various testing strategies, including unit tests, integration t
 make test
 ```
 
-This will run all the tests, including those with race detection enabled.
+This will run all the tests, including those with race detection enabled. In addition you can build a HTML report that shows code not covered by tests.
 
 ## Additional Notes
 
-To ensure high availability of our counter, we can use Redis's built-in replication features. Redis Enterprise, for example, provides automatic failover and cross-region replication. For additional durability, we can periodically persist the counter value to a more durable storage system. This repo maintains a simple redis instance for local testing.
+To ensure high availability of our counter, we can use Redis's built-in replication features. Redis Enterprise, for example, provides automatic failover and cross-region replication. For additional durability, we can periodically persist the counter value to a more durable storage system. This project maintains a simple redis instance for local testing.
 
 ## License
 
