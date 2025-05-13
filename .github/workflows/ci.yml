@@ -1,0 +1,55 @@
+name: Basic CI
+
+on:
+  push:
+    branches:
+      - main
+      - gha
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  basic-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install golangci-lint
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.5
+
+      - name: Run linter
+        run: make lint
+
+      - name: Vet code
+        run: make vet
+
+      - name: Install mockgen
+        run: go install go.uber.org/mock/mockgen@latest
+
+      - name: Run check go generate
+        run: make check-generate
+
+      - name: Install Swagger
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Check Swagger docs
+        run: make check-swag
+
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Run tests
+      run: make test
