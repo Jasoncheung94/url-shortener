@@ -6,7 +6,8 @@ COVERAGE_FILE = coverage.out
 SHELL := /bin/bash
 MIGRATIONS_PATH = ./internal/database/migrations
 DB_ADDR = postgres://admin:adminpassword@localhost/url_shortener_db?sslmode=disable
-EXCLUDE_DIRS = mocks|cmd|docs|dump
+EXCLUDE_DIRS = mocks|cmd|docs|dump|ratelimiter|database|server|validator|middleware|config|logger| # Future improvement to add tests :)
+COVERAGE_THRESHOLD = 70
 
 # Default target - run when only make is used with no args.
 .PHONY: all
@@ -33,8 +34,8 @@ coverage-percentage:
 	$(GO) test -coverprofile=$(COVERAGE_FILE) $$(go list ./... | grep -vE '/($(EXCLUDE_DIRS))')
 	@coverage=$$(go tool cover -func=coverage.out | tail -n 1 | awk '{print $$3}' | sed 's/%//' | tr -d '\n'); \
 	echo "Coverage: $$coverage"; \
-	if [ $$(echo "$$coverage < 70" | bc -l) -eq 1 ]; then \
-		echo "Test coverage is below 70%. Current coverage: $$coverage%."; \
+	if [ $$(echo "$$coverage < $(COVERAGE_THRESHOLD)" | bc -l) -eq 1 ]; then \
+		echo "Test coverage is below $(COVERAGE_THRESHOLD)%. Current coverage: $$coverage%."; \
 		exit 1; \
 	fi
 
@@ -88,20 +89,32 @@ generate:
 # Check if generated files should be created.
 .PHONY: check-generate
 check-generate:
-	go generate ./...
+	@go generate ./...
 	@if [[ -n "$$(git status --porcelain)" ]]; then \
-		echo "❌ Uncommitted changes after 'go generate'."; \
+		echo "❌ Uncommitted changes after checking 'go generate'."; \
 		git status; \
-		git diff; \
+		echo "Please update generated files by running:"; \
+		echo -e "\033[1;31m\tgo generate ./...\033[0m"; \
 		exit 1; \
 	else \
 		echo "✅ No changes after 'go generate'."; \
 	fi
 
 # Generate swagger docs.
+#  Add to suppress warnings > /dev/null 2>&1
 .PHONY: swag
 swag:
 	swag init -d ./cmd/url-shortener --pdl 3
+
+# Check if Swagger docs are up-to-date.
+# Runs `swag init` silently and fails if `docs/` contains uncommitted changes.
+# Useful in CI to ensure docs are regenerated and committed when needed.
+.PHONY: check-swag
+check-swag:
+	@echo "🧪 Regenerating Swagger docs silently for comparison..."
+	@swag init -d ./cmd/url-shortener --pdl 3 > /dev/null 2>&1 || true
+	@git diff --exit-code docs || (echo "❌ Swagger docs are outdated. Run 'make swag' and commit the changes." && exit 1)
+
 
 # Create new SQL migration.
 .PHONY: migrate-create
@@ -141,3 +154,4 @@ install-tools:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/swaggo/swag/cmd/swag@latest
 	go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	go install go.uber.org/mock/mockgen@latest

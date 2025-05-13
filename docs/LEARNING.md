@@ -84,3 +84,18 @@ Solutions: Abstract common items used in all layers. eg model.ShortURL in it's o
 Same idea applies to interfaces.
 
 Refactored interface.go of package Repository to be part of shortener package repository.go instead. This works but requires updating all naming of packages to x_test.go aka black box testing and exporting any functions so it can be used.
+
+## Testing
+
+Always ensure new instance when tests in parallel and avoid race condition.
+
+```
+for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			db, mock := redismock.NewClientMock()
+			cache := NewRedis(db)
+
+			tt.mockBehavior(mock)
+```

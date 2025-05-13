@@ -81,13 +81,14 @@ func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
 
 	cleanup := func() {
 		db.Close()
-		container.Terminate(ctx)
+		_ = container.Terminate(ctx)
 	}
 
 	return db, cleanup
 }
 
 func TestIntegrationPostgresRepo_SaveAndGetURL(t *testing.T) {
+	t.Parallel()
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 

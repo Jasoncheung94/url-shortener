@@ -81,6 +81,10 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
       summary: Preview a short URL
       tags:
       - URL Shortener

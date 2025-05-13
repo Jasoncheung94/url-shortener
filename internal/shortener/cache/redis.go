@@ -8,6 +8,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+//go:generate mockgen -source=redis.go -destination=../../mocks/mock_redis_cache.go -package=mocks
+
 // RedisInterface represents the methods for interacting with redis.
 type RedisInterface interface {
 	Set(ctx context.Context, key string, value any, ttl time.Duration) error

@@ -182,6 +182,7 @@ func (h *Handler) RedirectURL(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} model.URL
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Failure 500 {string} string
 // @Router /preview/{shorturl} [get]
 func (h *Handler) PreviewURL(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -222,3 +223,12 @@ func (h *Handler) PreviewURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
+
+// DumpStruct dumps data in a readable format.
+// func DumpStruct(data any) {
+// 	jsonData, err := json.MarshalIndent(data, "", "  ")
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	fmt.Println(string(jsonData))
+// }

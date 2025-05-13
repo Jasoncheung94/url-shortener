@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/jasoncheung94/url-shortener/internal/mocks"
 	"github.com/jasoncheung94/url-shortener/internal/shortener"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestRouter(t *testing.T) {

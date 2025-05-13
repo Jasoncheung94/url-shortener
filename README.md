@@ -9,15 +9,9 @@
 
 URL Shortener is a Go-based application that allows users to shorten URLs and redirect by retrieving the original ones using short codes. Built as a learning and showcase project, it explores different practices in Go development, Dockerization, multi-database support, caching strategies, and architecture patterns.
 
-This project is not intended for production use, but it demonstrates a backend built with real-world principles and tooling, making it easily adaptable for future development. It was created as a learning platform to explore and test various technologies and approaches. While the project may not be complete, it effectively showcases different scenarios and database options, serving as a foundation for experimentation and learning.
-
-## Architecture Overview
-
-High Level Design
+This project is not intended for production use, but it demonstrates a backend built with real-world principles and tooling, making it easily adaptable for future development. It was created as a learning platform to explore and test various technologies and approaches step by step. While the project may not be complete, it effectively showcases different scenarios and database options, serving as a foundation for experimentation and learning.
 
 ![High Level Design POC](docs/HighLevelDesign.jpg)
-
-<!-- <img src="docs/HighLevelDesign.jpg" alt="High Level Design POC" width="600"/> -->
 
 ## Feature Overview
 
@@ -89,13 +83,15 @@ This will up the containers and run SQL migrations and run the Go app with live 
 make dev
 ```
 
+or
+
 Start with docker but run the Go app locally (with live reload via air):
 
 ```
 make dev-local
 ```
 
-Other commands include:
+**See makefile for full list**, Other commands include:
 
 | Command                  | Description                                  |
 | ------------------------ | -------------------------------------------- |
