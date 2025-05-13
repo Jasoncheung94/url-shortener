@@ -2,15 +2,117 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang-migrate/migrate/v4"
+	postm "github.com/golang-migrate/migrate/v4/database/postgres" // golang-migrate postgres driver
+	_ "github.com/golang-migrate/migrate/v4/source/file"           // Import the file driver here
 	"github.com/jasoncheung94/url-shortener/internal/ptr"
 	"github.com/jasoncheung94/url-shortener/internal/shortener/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
+
+func applyMigrations(db *sqlx.DB, t *testing.T) {
+	// Get the absolute path of your migrations directory
+	migrationsPath, err := filepath.Abs("../../database/migrations")
+	fmt.Println("Path:", migrationsPath)
+	if err != nil {
+		t.Fatalf("failed to get absolute path: %v", err)
+	}
+	fmt.Println("Migrations path:", migrationsPath) // For debugging
+
+	driver, err := postm.WithInstance(db.DB, &postm.Config{})
+	if err != nil {
+		t.Fatalf("could not create migrate driver: %v", err)
+	}
+
+	migrationsPath = "../../database/migrations"
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://"+migrationsPath,
+		"postgres", // Your database driver
+		driver,     // The database driver instance
+	)
+	if err != nil {
+		t.Fatalf("failed to create migrate instance: %v", err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		t.Fatalf("failed to run migrations: %v", err)
+	}
+}
+
+func setupTestDB(t *testing.T) (*sqlx.DB, func()) {
+	t.Helper()
+
+	ctx := context.Background()
+
+	container, err := postgres.Run(ctx,
+		"postgres:latest",
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("user"),
+		postgres.WithPassword("pass"),
+		// postgres.BasicWaitStrategies(),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2).
+				WithStartupTimeout(5*time.Second)),
+	)
+	if err != nil {
+		t.Fatalf("failed to start postgres container: %v", err)
+	}
+
+	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		t.Fatalf("failed to get connection string: %v", err)
+	}
+
+	db := sqlx.MustConnect("postgres", connStr)
+
+	applyMigrations(db, t)
+
+	cleanup := func() {
+		db.Close()
+		container.Terminate(ctx)
+	}
+
+	return db, cleanup
+}
+
+func TestIntegrationPostgresRepo_SaveAndGetURL(t *testing.T) {
+	db, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	repo := NewPostgres(db)
+
+	url := &model.URL{
+		OriginalURL: "https://example.com",
+		ShortURL:    "abc123",
+		CustomURL:   nil,
+		CreatedAt:   time.Now(),
+	}
+
+	err := repo.SaveURL(context.Background(), url)
+	require.NoError(t, err)
+	require.NotZero(t, url.ID)
+
+	result, err := repo.GetURL(context.Background(), "abc123")
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, url.OriginalURL, result.OriginalURL)
+	require.Equal(t, url.ShortURL, result.ShortURL)
+	result, err = repo.GetURL(context.Background(), "fake-doesnt-exist")
+	require.Error(t, err)
+	require.Nil(t, result)
+}
 
 func TestPostgresSaveURL(t *testing.T) {
 	t.Parallel()
