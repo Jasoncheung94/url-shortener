@@ -1,9 +1,5 @@
-<!-- [![Go Report Card](https://goreportcard.com/badge/github.com/jasoncheung94/url-shortener)](https://goreportcard.com/report/github.com/jasoncheung94/url-shortener)
-[![CI](https://github.com/jasoncheung94/url-shortener/actions/workflows/ci.yml/badge.svg)](https://github.com/jasoncheung94/url-shortener/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](https://shields.io/)
-[![License](https://img.shields.io/github/license/jasoncheung94/url-shortener)](https://github.com/jasoncheung94/url-shortener/blob/main/LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/jasoncheung94/url-shortener)](https://hub.docker.com/r/jasoncheung94/url-shortener)
-[![GitHub Stars](https://img.shields.io/github/stars/jasoncheung94/url-shortener?style=social)](https://github.com/jasoncheung94/url-shortener/stargazers) -->
+[![Basic CI](https://github.com/Jasoncheung94/url-shortener/actions/workflows/ci.yml/badge.svg)](https://github.com/Jasoncheung94/url-shortener/actions/workflows/ci.yml)
+[![Tag and Release](https://github.com/Jasoncheung94/url-shortener/actions/workflows/release.yml/badge.svg)](https://github.com/Jasoncheung94/url-shortener/actions/workflows/release.yml)
 
 # URL Shortener
 
