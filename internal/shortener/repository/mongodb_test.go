@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jasoncheung94/url-shortener/internal/errors"
 	e "github.com/jasoncheung94/url-shortener/internal/errors"
 	"github.com/jasoncheung94/url-shortener/internal/shortener/model"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +13,7 @@ import (
 )
 
 func TestSaveURL_Success(t *testing.T) {
+	t.Parallel()
 	// Create a new MongoDB test environment with proper client options
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
@@ -42,6 +42,7 @@ func TestSaveURL_Success(t *testing.T) {
 }
 
 func TestSaveURL_DuplicateError(t *testing.T) {
+	t.Parallel()
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
 	urlData := &model.URL{
@@ -65,11 +66,12 @@ func TestSaveURL_DuplicateError(t *testing.T) {
 		err := repo.SaveURL(context.Background(), urlData)
 
 		// Assert the expected duplicate error occurs.
-		assert.Equal(t, errors.NewConflictError("short url already exists"), err)
+		assert.Equal(t, e.NewConflictError("short url already exists"), err)
 	})
 }
 
 func TestGetURL_Success(t *testing.T) {
+	t.Parallel()
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
 	mt.Run("Test GetURL Success", func(mt *mtest.T) {
@@ -105,6 +107,7 @@ func TestGetURL_Success(t *testing.T) {
 }
 
 func TestGetURL_NotFound(t *testing.T) {
+	t.Parallel()
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
 	mt.Run("Test GetURL Not Found", func(mt *mtest.T) {
@@ -125,6 +128,7 @@ func TestGetURL_NotFound(t *testing.T) {
 }
 
 func TestIncrementCounter_Success(t *testing.T) {
+	t.Parallel()
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
 	mt.Run("Test IncrementCounter Success", func(mt *mtest.T) {
@@ -151,6 +155,7 @@ func TestIncrementCounter_Success(t *testing.T) {
 }
 
 func TestIncrementCounter_Error(t *testing.T) {
+	t.Parallel()
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 
 	mt.Run("Test IncrementCounter Error", func(mt *mtest.T) {
