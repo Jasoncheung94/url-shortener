@@ -29,7 +29,7 @@ Each time a new URL is shortened:
 | Redis counter management + persistence              | Makefile for automated build, test, run tasks              |
 | Pluggable storage architecture (repository pattern) | Linter and static analysis (golangci-lint)                 |
 | Rate limiting (multiple strategies supported)       | Mocks for unit testing (mockgen, gomock)                   |
-| SQL migrations with golang-migrate                  | Integration tests with testcontainers                      |
+| SQL migrations with golang-migrate                  | Example Integration tests with testcontainers (Postgres)   |
 | Health check & diagnostic routes (/health)          | Code coverage and HTML report                              |
 | Graceful shutdown support                           | Swagger API documentation                                  |
 | Logging & custom error handling                     | Docker GUI: Mongo Express, Redis Insight                   |
@@ -203,3 +203,14 @@ A simple UI design that takes in a long url, optional custom alias and expiratio
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Helpful Commands
+
+| Command                                 | Description                                    |
+| --------------------------------------- | ---------------------------------------------- |
+| `docker-compose down -v`                | Down all containers and their volumes          |
+| `docker logs -f <nameofcontainer>`      | Show logs of a container                       |
+| `docker-compose up -d --force-recreate` | Up and Rebuild containers                      |
+| `tree -L 4 > project_structure.txt`     | Print structure of project(needs tree command) |
+| `lsof tcp:<port>`                       | List process on port                           |
+| `lsof -9 <id>`                          | Kill process by id                             |
