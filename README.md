@@ -1,13 +1,23 @@
 [![Basic CI](https://github.com/Jasoncheung94/url-shortener/actions/workflows/ci.yml/badge.svg)](https://github.com/Jasoncheung94/url-shortener/actions/workflows/ci.yml)
 [![Tag and Release](https://github.com/Jasoncheung94/url-shortener/actions/workflows/release.yml/badge.svg)](https://github.com/Jasoncheung94/url-shortener/actions/workflows/release.yml)
+![Go Version](https://img.shields.io/github/go-mod/go-version/Jasoncheung94/url-shortener)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 
 # URL Shortener
 
 URL Shortener is a Go-based application that allows users to shorten URLs and redirect by retrieving the original ones using short codes. Built as a learning and showcase project, it explores different practices in Go development, Dockerization, multi-database support, caching strategies, and architecture patterns.
 
-This project is not intended for production use, but it demonstrates a backend built with real-world principles and tooling, making it easily adaptable for future development. It was created as a learning platform to explore and test various technologies and approaches step by step. While the project may not be complete, it effectively showcases different scenarios and database options, serving as a foundation for experimentation and learning.
+This is a learning project and isn't meant for production use yet, but it demonstrates a backend built with real-world principles and tooling, making it easily adaptable for future development. It was created as a learning platform to explore and test various technologies and approaches step by step. While the project may not be complete, it effectively showcases different scenarios and database options, serving as a foundation for experimentation and learning.
 
 ![High Level Design POC](docs/HighLevelDesign.jpg)
+
+This project uses a simple incrementing counter stored in Redis, combined with Base62 encoding, to generate short URLs.
+
+Each time a new URL is shortened:
+
+- A global counter is incremented.
+- The integer is encoded in Base62 (digits + lowercase + uppercase letters).
+- This produces a compact, human-readable short code starting from `1`.
 
 ## Feature Overview
 
@@ -23,8 +33,8 @@ This project is not intended for production use, but it demonstrates a backend b
 | Health check & diagnostic routes (/health)          | Code coverage and HTML report                              |
 | Graceful shutdown support                           | Swagger API documentation                                  |
 | Logging & custom error handling                     | Docker GUI: Mongo Express, Redis Insight                   |
-| URL shortening via Base62 + Counter                 | SQL migrations with golang-migrate                         |
-| Cache layer abstraction                             | CI/CD pipeline setup                                       |
+| URL shortening via Base62 + Counter                 | Auto Tagging/Release on push to main                       |
+| Cache layer abstraction                             | CI/CD pipeline setup + Auto Tag and Release                |
 
 ## API Endpoints
 
@@ -87,17 +97,17 @@ Start with docker but run the Go app locally (with live reload via air):
 make dev-local
 ```
 
-**See makefile for full list**, Other commands include:
+**See [makefile](./Makefile) for full list**, Other commands include:
 
-| Command                  | Description                                  |
-| ------------------------ | -------------------------------------------- |
-| make test                | Run tests with race flag                     |
-| make lint                | Run golangci linter with config              |
-| make vet                 | Vet your Go code for suspicious constructs   |
-| make swag                | Generate swagger docs                        |
-| make generate            | Generate all generated files eg Mocks        |
-| make coverage            | Run coverage report - HTML report            |
-| make coverage-percentage | Generate percentage of code covered by tests |
+| Command                    | Description                                  |
+| -------------------------- | -------------------------------------------- |
+| `make test`                | Run tests with race flag                     |
+| `make lint`                | Run golangci linter with config              |
+| `make vet`                 | Vet your Go code for suspicious constructs   |
+| `make swag`                | Generate swagger docs                        |
+| `make generate`            | Generate all generated files eg Mocks        |
+| `make coverage`            | Run coverage report - HTML report            |
+| `make coverage-percentage` | Generate percentage of code covered by tests |
 
 ## Configuration
 
@@ -166,9 +176,29 @@ make test
 
 This will run all the tests, including those with race detection enabled. In addition you can build a HTML report that shows code not covered by tests.
 
-## Additional Notes
+## Shortening the URL
 
-To ensure high availability of our counter, we can use Redis's built-in replication features. Redis Enterprise, for example, provides automatic failover and cross-region replication. For additional durability, we can periodically persist the counter value to a more durable storage system. This project maintains a simple redis instance for local testing.
+This project uses a simple incrementing counter combined with Base62 encoding to generate short URLs. This approach was chosen for its simplicity, performance, and predictability. Each time a new URL is shortened, a global counter is incremented in Redis, and the resulting integer is encoded in Base62 (using digits, lowercase, and uppercase letters) to produce a compact, human-friendly short code. The short code starts from 1 maximizing the number of URL's we can use.
+
+Why this approach? Efficiency: Using a counter ensures quick ID generation, and the Base62 encoding avoids collisions without needing additional storage or hashing.
+Predictability: Since it's sequential, it's easy to reason about and scale.
+Compactness: Base62 encoding creates shorter, more compact URLs than using plain numbers or UUIDs.
+
+### Considerations:
+
+Guessability: Because the IDs are sequential, someone could infer the number of URLs in the system or attempt to enumerate them. If this is a concern (e.g., for private or sensitive URLs), an alternative like a bijective function with a secret salt or other method (e.g., Squids) can be used to produce non-sequential, non-guessable identifiers.
+
+Security: The current approach is not designed for security by obscurity. If unguessability is a requirement, consider using hashids, UUIDv7 with compression, or other cryptographic-safe approaches.
+
+## Redis Availability
+
+To ensure high availability of the counter, we can use Redis’s replication and persistence features. Redis Enterprise, for example, supports automatic failover and cross-region replication. For additional durability, the counter can be periodically persisted to a more durable backend (e.g., a SQL or NoSQL database). In this project, a simple Redis instance is used for local testing purposes. See Redis Enterprise for deploying live.
+
+## UI
+
+A simple UI design that takes in a long url, optional custom alias and expiration date.
+
+<img src="./docs/gui.png" width=400>
 
 ## License
 
